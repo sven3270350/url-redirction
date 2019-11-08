@@ -1,5 +1,4 @@
 # url-redirect
-
 [AWS CDK program to redirect URLs. Designed to handle paths.](https://docs.aws.amazon.com/en_us/cdk/latest/guide/getting_started.html)
 
 Need to do:
@@ -36,4 +35,3 @@ npm install @types/node
 npm install @aws-cdk/aws-s3
 cdk ls
 ```
-
