@@ -5,7 +5,8 @@ Need to do:
 
 1.Exporting aws account wariables
 
-```# export AWS_DEFAULT_REGION=eu-central-1
+```
+# export AWS_DEFAULT_REGION=eu-central-1
 # export AWS_DEFAULT_REGION=eu-central-1
 # export CDK_DEPLOY_REGION=eu-central-1
 # export CDK_DEPLOY_ACCOUNT=111111111111
@@ -25,23 +26,23 @@ certificate ...
 2.Come into working dir in project
 
 ```
-d ~/IdeaProjects/url-redirect/AlbR53
+# cd ~/IdeaProjects/url-redirect/AlbR53
 ```
 
 3.Compile and see CloudFormation template
 
 ```
-npm run build;cdk synth
+# npm run build;cdk synth
 ```
 
 4.Deploy stack
 ```
-cdk deploy
+# cdk deploy
 ```
 5.Additional commands (just for interest)
 ```
-aws confugure
-npm install @types/node
-npm install @aws-cdk/aws-s3
-cdk ls
+# aws confugure
+# npm install @types/node
+# npm install @aws-cdk/aws-s3
+# cdk ls
 ```
