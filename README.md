@@ -24,10 +24,14 @@ certificate ...
 
 2.Come into working dir in project
 
-```cd ~/IdeaProjects/url-redirect/AlbR53```
+```
+d ~/IdeaProjects/url-redirect/AlbR53
+```
 
 3.Compile and see CloudFormation template
-```npm run build;cdk synth
+
+```
+npm run build;cdk synth
 ```
 
 4.Deploy stack
