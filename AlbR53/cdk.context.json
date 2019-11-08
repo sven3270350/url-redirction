@@ -1,0 +1,48 @@
+{
+  "vpc-provider:account=976316263895:filter.isDefault=true:region=eu-west-1": {
+    "vpcId": "vpc-4c7a582a",
+    "availabilityZones": [
+      "eu-west-1a",
+      "eu-west-1b",
+      "eu-west-1c"
+    ],
+    "publicSubnetIds": [
+      "subnet-9f650ad7",
+      "subnet-248b527e",
+      "subnet-d81d81be"
+    ],
+    "publicSubnetNames": [
+      "Public"
+    ],
+    "publicSubnetRouteTableIds": [
+      "rtb-9b9ecbe2",
+      "rtb-9b9ecbe2",
+      "rtb-9b9ecbe2"
+    ]
+  },
+  "vpc-provider:account=976316263895:filter.isDefault=true:region=eu-central-1": {
+    "vpcId": "vpc-a22b1ec9",
+    "availabilityZones": [
+      "eu-central-1a",
+      "eu-central-1b",
+      "eu-central-1c"
+    ],
+    "publicSubnetIds": [
+      "subnet-d58994be",
+      "subnet-0f004b72",
+      "subnet-39f9a674"
+    ],
+    "publicSubnetNames": [
+      "Public"
+    ],
+    "publicSubnetRouteTableIds": [
+      "rtb-9e4de2f4",
+      "rtb-9e4de2f4",
+      "rtb-9e4de2f4"
+    ]
+  },
+  "hosted-zone:account=976316263895:domainName=chipa.in.ua:region=eu-central-1": {
+    "Id": "/hostedzone/Z2DG8033CT4M0L",
+    "Name": "chipa.in.ua."
+  }
+}
