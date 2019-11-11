@@ -22,6 +22,12 @@ certificate ...
 ```
 "certificateArns": "arn:aws:acm:eu-central-1:111111111111:certificate/645f5723-e289-46a7-b0cf-ede222d9f7d5"
 ```
+change setting into AlbR53/bin/alb_r53.ts
+
+```
+account: 'xxxxxxxxxx',
+region: 'eu-central-1'
+```
 
 2.Come into working dir in project
 

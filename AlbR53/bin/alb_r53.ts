@@ -8,6 +8,6 @@ const app = new cdk.App();
 new AlbR53Stack(app, 'AlbR53Stack', {env: {
     // account: process.env.CDK_DEFAULT_ACCOUNT,
     // region: process.env.CDK_DEFAULT_REGION
-    account: '976316263895',
+    account: 'xxxxxxxxxx',
     region: 'eu-central-1'
 }});
