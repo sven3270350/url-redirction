@@ -8,13 +8,23 @@ export class AlbR53Stack extends core.Stack {
     super(scope, id, props);
 
     // parse json
-    const fs = require('fs');
-    const fileContents = fs.readFileSync('./data.json', 'utf8');
+    // const fs = require('fs');
+    // const fileContents = fs.readFileSync('./data.json', 'utf8');
+    //
+    // try {
+    //   var data = JSON.parse(fileContents)
+    // } catch(err) {
+    //   console.error(err);
+    // }
+
+    // parse yml
+    const yaml = require('js-yaml');
+    const fs   = require('fs');
 
     try {
-      var data = JSON.parse(fileContents)
-    } catch(err) {
-      console.error(err);
+      var data = yaml.safeLoad(fs.readFileSync('data.yml', 'utf8'));
+    } catch (e) {
+      console.log(e);
     }
 
     for (let domain_name in data.domain) {
@@ -37,9 +47,15 @@ export class AlbR53Stack extends core.Stack {
 
       //// alb
 
-      // get default vpc
-      const vpc =  ec2.Vpc.fromLookup(this, 'DefaultVpc', {
-          isDefault: true
+    //  // get default vpc
+    //   const vpc =  ec2.Vpc.fromLookup(this, 'DefaultVpc', {
+    //       isDefault: true
+    //   });
+    //
+
+      // create vpc
+      const vpc = new ec2.Vpc(this, "MyVpc", {
+        maxAzs: 3 // Default is all AZs in region
       });
 
       // create lb

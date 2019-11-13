@@ -38,7 +38,7 @@
             "statusCode": "HTTP_302"
           }
         },
-        "certificateArns": "arn:aws:acm:eu-central-1:111111111111:certificate/645f5723-e289-46a7-b0cf-ede222d9f7d5"
+        "certificateArns": "arn:aws:acm:eu-central-1:111111111111111111:certificate/645f5723-e289-46a7-b0cf-ede222d9f7d5"
       }
     }
   }

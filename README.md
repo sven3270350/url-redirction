@@ -13,10 +13,10 @@ Need to do:
 # export AWS_SECRET_ACCESS_KEY=9999999999999999999999999999999999999999
 # export AWS_ACCESS_KEY_ID=AAAAAAAAAAAAAAAAAAAA
 ```
-change settings into file AlbR53/data.json fir example domain
+change settings into file AlbR53/data.yml fir example domain
 ```
-domain": {
-    "chipa.in.ua": {
+domain:
+  chipa.in.ua:
 ```
 certificate ...
 ```
@@ -51,4 +51,5 @@ region: 'eu-central-1'
 # npm install @types/node
 # npm install @aws-cdk/aws-s3
 # cdk ls
+# npm install --save js-yaml
 ```
