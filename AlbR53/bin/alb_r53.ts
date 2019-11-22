@@ -6,8 +6,8 @@ import { AlbR53Stack } from '../lib/alb_r53-stack';
 const app = new cdk.App();
 // new AlbR53Stack(app, 'AlbR53Stack');
 new AlbR53Stack(app, 'AlbR53Stack', {env: {
-    // account: process.env.CDK_DEFAULT_ACCOUNT,
-    // region: process.env.CDK_DEFAULT_REGION
-    account: '11111111111111',
-    region: 'eu-central-1'
-}});
+        // account: process.env.CDK_DEFAULT_ACCOUNT,
+        // region: process.env.CDK_DEFAULT_REGION
+        account: '111111111111',
+        region: 'eu-central-1'
+    }});

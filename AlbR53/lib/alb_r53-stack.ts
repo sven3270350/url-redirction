@@ -2,24 +2,15 @@ import core = require('@aws-cdk/core');
 import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
 import ec2 = require('@aws-cdk/aws-ec2');
 import route53 = require('@aws-cdk/aws-route53');
+import targets = require('@aws-cdk/aws-route53-targets');
 
 export class AlbR53Stack extends core.Stack {
   constructor(scope: core.App, id: string, props?: core.StackProps) {
     super(scope, id, props);
 
-    // parse json
-    // const fs = require('fs');
-    // const fileContents = fs.readFileSync('./data.json', 'utf8');
-    //
-    // try {
-    //   var data = JSON.parse(fileContents)
-    // } catch(err) {
-    //   console.error(err);
-    // }
-
     // parse yml
     const yaml = require('js-yaml');
-    const fs   = require('fs');
+    const fs = require('fs');
 
     try {
       var data = yaml.safeLoad(fs.readFileSync('data.yml', 'utf8'));
@@ -27,104 +18,111 @@ export class AlbR53Stack extends core.Stack {
       console.log(e);
     }
 
-    for (let domain_name in data.domain) {
+    const vpc = new ec2.Vpc(this, "VPC", {
+      maxAzs: 2 // Default is all AZs in region
+    });
 
-      //// r53
+    // create lb
+    const lb = new elbv2.ApplicationLoadBalancer(this, 'LB', {
+      vpc,
+      internetFacing: true
+    });
 
-      // get zone
-      const zone = route53.HostedZone.fromLookup(this, 'MyZone', {
-        domainName: domain_name
-      });
+    // http listener
+    const listener = lb.addListener('ListenerHttp', {
+      protocol: elbv2.ApplicationProtocol.HTTP,
+    });
 
-      // create records
-      for (let rec in data.domain[domain_name]['r53']['type']['A']) {
-        new route53.ARecord(this, 'ARecord' + Number(rec), {
-          zone: zone,
-          recordName: data.domain[domain_name]['r53']['type']['A'][rec]['recordName'],
-          target: route53.RecordTarget.fromIpAddresses(data.domain[domain_name]['r53']['type']['A'][rec]['target'])
-        });
-      }
+    // http DummyResponse
+    listener.addFixedResponse('Fixed', {
+      statusCode: '404'
+    });
 
-      //// alb
+    for (let redirects in data.redirects) {
 
-    //  // get default vpc
-    //   const vpc =  ec2.Vpc.fromLookup(this, 'DefaultVpc', {
-    //       isDefault: true
-    //   });
-    //
-
-      // create vpc
-      const vpc = new ec2.Vpc(this, "MyVpc", {
-        maxAzs: 3 // Default is all AZs in region
-      });
-
-      // create lb
-      const lb = new elbv2.ApplicationLoadBalancer(this, 'LB', {
-        vpc,
-        internetFacing: true
-      });
-
-      // http listener
-      const listener = lb.addListener('ListenerHttp', {
-        protocol: elbv2.ApplicationProtocol.HTTP,
-      });
-
-      // http DummyResponse
-      listener.addFixedResponse('Fixed', {
-        statusCode: '404'
-      });
-
-      // redirect http to https
-      const cfnHttpListener = listener.node.defaultChild as elbv2.CfnListener;
-      cfnHttpListener.defaultActions = [{
-        type: "redirect",
-        redirectConfig: {
-          protocol: "HTTPS",
-          host: "#{host}",
-          path: "/#{path}",
-          query: "#{query}",
-          port: "443",
-          statusCode: "HTTP_301"
+        // src
+        var SRC: string = data.redirects[redirects].source;
+        var SRC_PROTOCOL: string = SRC.split('//')[0].split(':')[0];
+        const SRC_DOMAIN: string = SRC.split('/')[2];
+        if (SRC.split('/')[3]) {
+            var SRC_PATH: string = '/' + SRC.split('/')[3];
+        } else {
+            var SRC_PATH: string = '/';
         }
-      }];
 
-      // https listener
-      const listenerhttps = lb.addListener('ListenerHttps', {
-        protocol: elbv2.ApplicationProtocol.HTTPS,
-        certificateArns: [data.domain[domain_name]['alb']['certificateArns']]
-      });
+        // tgt
+        var TGT: string = data.redirects[redirects].target;
+        var TGT_PROTOCOL: string = TGT.split('//')[0].split(':')[0].toLocaleUpperCase( );
+        if (TGT_PROTOCOL === 'HTTPS') {
+          var TGT_PORT = '443';
+        } else {
+          var TGT_PORT = '80';
+        }
+        var TGT_DOMAIN: string = TGT.split('/')[2];
+        if (TGT.split('/')[3]) {
+            var TGT_PATH: string = '/' + TGT.split('/')[3];
+        } else {
+            var TGT_PATH: string = '/';
+        }
 
-      // https DummyResponse
-      listenerhttps.addFixedResponse('Fixed', {
-        statusCode: '404'
-      });
+        // oth
+        var CERT: string = data.redirects[redirects].cert;
+        var COMMENT: string = data.redirects[redirects].comment;
 
-      // https rules
-      for (let i in data.domain[domain_name]['alb']['priority']) {
-        new elbv2.CfnListenerRule(this, 'resource' + Number(i), {
-          listenerArn: listenerhttps.listenerArn,
-          priority: Number(i),
-          conditions: [
-            {
-              field: data.domain[domain_name]['alb']['priority'][i]['field'],
-              values: [data.domain[domain_name]['alb']['priority'][i]['values']]
-            }
-          ],
-          actions: [
-            {
-              type: "redirect",
-              redirectConfig: {
-                protocol: data.domain[domain_name]['alb']['priority'][i]['protocol'],
-                port: data.domain[domain_name]['alb']['priority'][i]['port'],
-                host: data.domain[domain_name]['alb']['priority'][i]['host'],
-                path: data.domain[domain_name]['alb']['priority'][i]['path'],
-                query: data.domain[domain_name]['alb']['priority'][i]['query'],
-                statusCode: data.domain[domain_name]['alb']['priority'][i]['statusCode']
-              }
-            }
-          ]
+        new elbv2.CfnListenerRule(this, 'resource' + Number(redirects), {
+            listenerArn: listener.listenerArn,
+            priority: Number(redirects) + 1,
+            conditions: [
+                    {
+                      field: 'path-pattern',
+                      values: [SRC_PATH]
+                    }
+                  ],
+            actions: [
+                {
+                    type: "redirect",
+                    redirectConfig: {
+                        protocol: TGT_PROTOCOL,
+                        port: TGT_PORT,
+                        host: TGT_DOMAIN,
+                        path: "/#{path}" + TGT_PATH,
+                        query: "#{query}",
+                        statusCode: "HTTP_301"
+                    }
+                }
+            ]
         });
-      }
-    }
+
+        console.log();
+        console.log(redirects);
+        console.log('SRC: ' + SRC);
+        console.log('SRC_PROTOCOL: ' + SRC_PROTOCOL);
+        console.log('SRC_DOMAIN: ' + SRC_DOMAIN);
+        console.log('SRC_PATH: ' + SRC_PATH);
+
+        console.log();
+        console.log('TGT: ' + TGT);
+        console.log('TGT_PROTOCOL: ' + TGT_PROTOCOL);
+        console.log('TGT_PORT: ' + TGT_PORT);
+        console.log('TGT_DOMAIN: ' + TGT_DOMAIN);
+        console.log('TGT_PATH: ' + TGT_PATH);
+
+        console.log();
+        console.log('CERT: ' + CERT);
+        console.log('COMMENT: ' + COMMENT);
+
+    };
+
+    // get zone
+    const zone = route53.HostedZone.fromLookup(this, 'MyZone', {
+      domainName: data.redirects[0].source.split('//')[1]
+    });
+
+    // create record on elb
+    new route53.ARecord(this, 'alias', {
+        zone: zone,
+        target: route53.RecordTarget.fromAlias(new targets.LoadBalancerTarget(lb))
+    });
+
   }
 }

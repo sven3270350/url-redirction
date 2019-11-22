@@ -1,31 +1,20 @@
 ---
-domain:
-  chipa.in.ua:
-    r53:
-      type:
-        A:
-          - recordName: foo
-            target: 1.2.3.4
-          - recordName: bar
-            target: 4.3.2.1
-    alb:
-      priority:
-        '1':
-          field: path-pattern
-          values: "/test1"
-          protocol: HTTPS
-          port: '443'
-          host: "#{host}"
-          path: "/#{path}/nettest1"
-          query: "#{query}"
-          statusCode: HTTP_301
-        '2':
-          field: path-pattern
-          values: "/test2"
-          protocol: HTTPS
-          port: '544'
-          host: "#{host}"
-          path: "/#{path}/nettest2"
-          query: "#{query}"
-          statusCode: HTTP_302
-      certificateArns: arn:aws:acm:eu-central-1:111111111111111111:certificate/645f5723-e289-46a7-b0cf-ede222d9f7d5
+redirects:
+  -
+    source: "http://example.com"
+    target: "https://example.com"
+    cert: "arn:asdfasdfasdf"
+    comment: "redirect to https"
+  -
+    source: "http://example.com"
+    target: "http://example.com/asdf/"
+    comment: "redirect domain to path on same domain"
+  -
+    source: "http://example.com/asdf"
+    target: "http://example.com/asdf2"
+    comment: "redirect path to different path on same domain"
+  -
+    source: "http://example.com/asdf"
+    target: "https://example.net/asdf"
+    cert: "arn:asdf2asdf2asdf2"
+    comment: "redirect path to path on different domain and protocol"
