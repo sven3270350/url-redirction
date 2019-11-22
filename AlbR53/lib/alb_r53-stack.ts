@@ -85,7 +85,7 @@ export class AlbR53Stack extends core.Stack {
                         protocol: TGT_PROTOCOL,
                         port: TGT_PORT,
                         host: TGT_DOMAIN,
-                        path: "/#{path}" + TGT_PATH,
+                        path: TGT_PATH,
                         query: "#{query}",
                         statusCode: "HTTP_301"
                     }
@@ -115,7 +115,7 @@ export class AlbR53Stack extends core.Stack {
 
     // get zone
     const zone = route53.HostedZone.fromLookup(this, 'MyZone', {
-      domainName: data.redirects[0].source.split('//')[1]
+      domainName: data.redirects[0].source.split('/')[2]
     });
 
     // create record on elb
