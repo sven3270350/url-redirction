@@ -52,4 +52,5 @@ region: 'eu-central-1'
 # npm install @aws-cdk/aws-s3
 # cdk ls
 # npm install --save js-yaml
+# npm update
 ```
