@@ -13,16 +13,8 @@ Need to do:
 # export AWS_SECRET_ACCESS_KEY=9999999999999999999999999999999999999999
 # export AWS_ACCESS_KEY_ID=AAAAAAAAAAAAAAAAAAAA
 ```
-change settings into file AlbR53/data.yml fir example domain
-```
-domain:
-  chipa.in.ua:
-```
-certificate ...
-```
-"certificateArns": "arn:aws:acm:eu-central-1:111111111111:certificate/645f5723-e289-46a7-b0cf-ede222d9f7d5"
-```
-change setting into AlbR53/bin/alb_r53.ts
+
+1.change setting into files AlbR53/data.yml, AlbR53/bin/alb_r53.ts
 
 ```
 account: 'xxxxxxxxxx',
