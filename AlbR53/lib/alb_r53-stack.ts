@@ -3,6 +3,9 @@ import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
 import ec2 = require('@aws-cdk/aws-ec2');
 import route53 = require('@aws-cdk/aws-route53');
 import targets = require('@aws-cdk/aws-route53-targets');
+import any = jasmine.any;
+import {ApplicationListener} from "@aws-cdk/aws-elasticloadbalancingv2";
+import {print} from "aws-cdk/lib/logging";
 
 export class AlbR53Stack extends core.Stack {
     constructor(scope: core.App, id: string, props?: core.StackProps) {
@@ -33,7 +36,9 @@ export class AlbR53Stack extends core.Stack {
             COMMENT: string;
         }
         var listobj: ListObj[] = [];
-        var test: ListObj[] = [];
+
+        // create array for uniq values
+        var string_arr = new Array();
 
         // data parsing - prom yml to listobj
         for (let redirects in data.redirects) {
@@ -46,6 +51,7 @@ export class AlbR53Stack extends core.Stack {
             } else {
                 var SRC_PATH: string = '/';
             }
+            string_arr.push(SRC_DOMAIN);
 
             // tgt parse
             var TGT: string = data.redirects[redirects].target;
@@ -79,9 +85,9 @@ export class AlbR53Stack extends core.Stack {
                 "CERT": CERT,
                 "COMMENT": COMMENT
             });
-        };
+        }
 
-        // print data
+        // debug
         for (let rule in listobj) {
             console.log();
             console.log(rule);
@@ -113,35 +119,106 @@ export class AlbR53Stack extends core.Stack {
             internetFacing: true
         });
 
-        // create listener
-        const listener = lb.addListener('ListenerHttp', {
-            protocol: elbv2.ApplicationProtocol.HTTP,
-        });
+        // do we need http redirects
+        if (listobj.some(e => e.SRC_PROTOCOL === 'http')) {
+            console.log("We have http")
+            // create listener
+            const listener = lb.addListener('ListenerHttp', {
+                protocol: elbv2.ApplicationProtocol.HTTP,
+            });
 
-        // create listener http dummy response
-        listener.addFixedResponse('Fixed', {
-            statusCode: '404'
-        });
+            // create listener http dummy response
+            listener.addFixedResponse('Fixed', {
+                statusCode: '404'
+            });
+
+            for (let rule in listobj) {
+                if (listobj[rule].SRC_PROTOCOL === 'http') {
+                    new elbv2.CfnListenerRule(this, 'resource' + Number(rule), {
+                        listenerArn: listener.listenerArn,
+                        priority: Number(rule) + 1,
+                        conditions: [
+                            {
+                                field: 'path-pattern',
+                                values: [listobj[rule].SRC_PATH]
+                            }
+                        ],
+                        actions: [
+                            {
+                                type: "redirect",
+                                redirectConfig: {
+                                    protocol: listobj[rule].TGT_PROTOCOL,
+                                    port: listobj[rule].TGT_PORT,
+                                    host: listobj[rule].TGT_DOMAIN,
+                                    path: listobj[rule].TGT_PATH,
+                                    query: "#{query}",
+                                    statusCode: "HTTP_301"
+                                }
+                            }
+                        ]
+                    });
+                }
+            }
+        }
 
         // do we need https redirects
         // https://stackoverflow.com/questions/42790602/how-do-i-check-whether-an-array-contains-a-string-in-typescript
         if (listobj.some(e => e.SRC_PROTOCOL === 'https' && e.CERT)) {
             console.log("We have https")
 
-            for (let proto in listobj) {
-                if (listobj[proto].SRC_PROTOCOL === 'https') {
-                    console.log('Need to crate https listener')
-                    const listenerhttps = lb.addListener('ListenerHttps', {
-                        protocol: elbv2.ApplicationProtocol.HTTPS,
-                        certificateArns: [listobj[proto].CERT]
-                    });
+            // @ts-ignore
+            var cert_arn = listobj.find(e => e.SRC_PROTOCOL === 'https' && e.CERT).CERT;
 
-                    // https DummyResponse
-                    listenerhttps.addFixedResponse('Fixed', {
-                        statusCode: '404'
+            var listenerhttps = lb.addListener('ListenerHttps', {
+                protocol: elbv2.ApplicationProtocol.HTTPS,
+                certificateArns: [cert_arn]
+            });
+
+            // https DummyResponse
+            listenerhttps.addFixedResponse('Fixed', {
+                statusCode: '404'
+            });
+
+            for (let rule in listobj) {
+                if (listobj[rule].SRC_PROTOCOL === 'https') {
+                    new elbv2.CfnListenerRule(this, 'resource' + Number(rule), {
+                        listenerArn: listenerhttps.listenerArn,
+                        priority: Number(rule),
+                        conditions: [
+                            {
+                                field: 'path-pattern',
+                                values: [listobj[rule].SRC_PATH]
+                            }
+                        ],
+                        actions: [
+                            {
+                                type: "redirect",
+                                redirectConfig: {
+                                    protocol: listobj[rule].TGT_PROTOCOL,
+                                    port: listobj[rule].TGT_PORT,
+                                    host: listobj[rule].TGT_DOMAIN,
+                                    path: listobj[rule].TGT_PATH,
+                                    query: "#{query}",
+                                    statusCode: "HTTP_301"
+                                }
+                            }
+                        ]
                     });
                 }
             }
+        }
+
+        // create array with uniq domains
+        var uniqueItems = Array.from(new Set(string_arr));
+
+        for (let uniqDomain in uniqueItems) {
+            // create record on elb
+            new route53.ARecord(this, 'alias' + Number(uniqDomain), {
+                zone: route53.HostedZone.fromLookup(this, 'MyZone' + Number(uniqDomain), {
+                    domainName: uniqueItems[uniqDomain]
+                }),
+                target: route53.RecordTarget.fromAlias(new targets.LoadBalancerTarget(lb))
+            });
         }
     }
 }
